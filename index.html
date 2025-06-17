@@ -564,7 +564,7 @@ function showQuiz(index) {
 
     const centerX = width / 2
     const centerY = height / 2
-    const radius = width / 2
+    const radius = width / 2;
 
     let items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
     let currentDeg = 0
@@ -640,7 +640,7 @@ function showQuiz(index) {
 
     function animate() {
       if (pause) return;
-      speed = easeOutSine(getPercent(currentDeg, maxRotation, 0)) * 20
+      speed = easeOutSine(getPercent(currentDeg, maxRotation, 0)) * 15
       if (speed < 0.01) {
         speed = 0
         pause = true
