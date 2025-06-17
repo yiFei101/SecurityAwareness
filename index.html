@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Security Awareness Wheel Game</title>
+  <style>
+    body {
+      background-color: #333;
+      color: #fff;
+      font-family: sans-serif;
+      margin: 0;
+    }
+
+    .header {
+      padding: 40px;
+      text-align: center;
+    }
+
+    .wheel {
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+
+    .center-circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 60px;
+      background-color: #fff;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+
+    .triangle {
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 30px solid white;
+      position: absolute;
+      top: 50%;
+      right: -220%;
+      transform: translateY(-50%);
+    }
+
+    textarea {
+      background-color: rgba(20, 20, 20, 0.2);
+      caret-color: #fff;
+      resize: none;
+      color: #fff;
+    }
+
+    .inputArea {
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
+    #quizModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    #quizModal .content {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    #quizChoices button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background: #444;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #quizChoices button:hover {
+      background: #555;
+    }
+
+    #correctAnswer {
+      margin-top: 15px;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+ <div class="header">
+  <h1>Security Awareness Quiz</h1>
+  <h1 style="display: none;">WINNER</h1>
+  <p id="winner" style="display: none;">NONE</p>
+</div>
+
+
+  <div class="wheel">
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <div class="center-circle" onclick="spin()">
+      <div class="triangle"></div>
+    </div>
+  </div>
+
+  <div class="inputArea" onchange="createWheel()" style="display: none;">
+    <textarea rows="20" cols="30">
+Q1
+Q2
+Q3
+Q4
+Q5
+Q6
+Q7
+Q8
+Q9
+Q10
+Q11
+Q12
+Q13
+Q14
+Q15
+Q16
+Q17
+Q18
+Q19
+Q20
+Q21
+Q22
+Q22
+Q23
+Q24
+Q25
+Q26
+Q27
+Q28
+Q29
+Q30
+Q31
+Q32
+Q33
+Q34
+Q35
+Q36
+Q37
+Q38
+Q39
+Q40
+Q41
+Q42
+Q43
+Q44
+Q45
+Q46
+Q47
+Q48
+Q49
+Q50
+</textarea>
+  </div>
+
+  <div id="quizModal">
+    <div class="content">
+      <h2 id="quizQuestion"></h2>
+      <div id="quizChoices"></div>
+      <div id="correctAnswer"></div>
+      <button onclick="closeQuiz()" style="margin-top:20px;">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const quizQuestions = [
+  {
+    question: "What is phishing?",
+    choices: ["A type of firewall", "A fake message to trick you", "Encrypted data", "A password manager"],
+    correct: 1,
+    explanation: "Phishing is a fraudulent attempt to trick users into revealing personal or sensitive information."
+  },
+  {
+    question: "What is a strong password?",
+    choices: ["123456", "Your name", "Mix of letters, numbers, symbols", "Just your birthdate"],
+    correct: 2,
+    explanation: "A strong password includes a combination of uppercase, lowercase, numbers, and symbols to resist brute-force attacks."
+  },
+  {
+    question: "Should you share your passwords with coworkers?",
+    choices: ["Only in emergencies", "Never", "If they are your manager", "If it's urgent"],
+    correct: 1,
+    explanation: "Passwords should never be shared. Each user should have individual credentials."
+  },
+  {
+    question: "What does 2FA stand for?",
+    choices: ["Two Factor Authentication", "Fast Access", "Encrypted Firewall Access", "Token-Free Account"],
+    correct: 0,
+    explanation: "2FA adds a second layer of security by requiring an additional form of verification."
+  },
+  {
+    question: "What should you do if you suspect a scam email?",
+    choices: ["Ignore it", "Click links to check", "Report it", "Reply to confirm"],
+    correct: 2,
+    explanation: "Suspicious emails should be reported to IT or security teams to avoid risk."
+  },
+   {
+    question: "Why should you avoid using the same password for multiple accounts?",
+    choices: ["It helps you remember easily", "It saves time", "A breach in one account can risk all others", " It’s a common practice"],
+    correct: 2,
+    explanation: "If one account is hacked, others with the same password can be accessed too."
+  },
+    {
+    question: "Which of the following is a good practice for protecting your devices?",
+    choices: ["Leaving them unlocked when unattended", "Sharing them with anyone who asks", "Using a screen lock or password", "Using them only during work hours"],
+    correct: 2,
+    explanation: "Locking your device helps prevent unauthorized access."
+  },
+    {
+    question: "What information should you never share publicly on social media?",
+    choices: ["Your address or ID numbers", "Your favorite food", "Vacation photos", "Your pet’s photo"],
+    correct: 0,
+    explanation: "Sensitive information can be used for identity theft."
+  },
+   {
+    question: "How often should you update your passwords?",
+    choices: ["Never", "Regularly or if there's a breach", "Only when you forget them", "Every 5 years"],
+    correct: 1,
+    explanation: "Regular updates reduce risk, especially after a data breach."
+  },
+{
+    question: "Why should you avoid using the same password across multiple sites?",
+    choices: ["It's inconvenient", "It slows down login", "It uses more memory", "If one site is breached, all accounts are at risk"],
+    correct: 3,
+    explanation: "A breach on one site can lead attackers to try the same credentials elsewhere."
+  },
+  {
+    question: "What’s the first thing you should check before clicking a link?",
+    choices: ["Its color", "Number of clicks", "If it’s trending", "Destination URL"],
+    correct: 3,
+    explanation: "Always hover to check the actual URL before clicking."
+  },
+   {
+    question: "Is it safe to share your password with coworkers?",
+    choices: ["Yes", "No", "Only with managers", "If urgent"],
+    correct: 1,
+    explanation: "You should never share your password with anyone."
+  },
+   {
+    question: "What is the purpose of changing passwords regularly?",
+    choices: ["Its fun", "Reduces risk of prolonged unauthorized access", "Company rule", "Fills time"],
+    correct: 1,
+    explanation: "Changing passwords often limits unauthorized access."
+  },
+    {
+    question: "Why should you avoid public Wi-Fi for sensitive work?",
+    choices: ["Its slow", "No password needed", "Its insecure and can be intercepted", "Too noisy"],
+    correct: 2,
+    explanation: "Public Wi-Fi is insecure and should be avoided for sensitive work."
+  },
+    {
+    question: "What is phishing?",
+    choices: ["Fishing game", "Firewall update", "IT tool", "raudulent attempt to get sensitive info"],
+    correct: 3,
+    explanation: "Phishing attempts trick users into revealing information"
+  },
+     {
+    question: "Phishing emails often:",
+    choices: ["Come from HR", "Are well-written", "Urge immediate action and have suspicious links", "Come with gifts"],
+    correct: 2,
+    explanation: "Phishing emails often try to create urgency or trick users."
+  },
+     {
+    question: "Best action for suspicious email?",
+    choices: ["Delete and report", " Click link", "Forward to coworkers", "Reply to sender"],
+    correct: 0,
+    explanation: "Dont click links or open attachments from unknown senders."
+  },
+   {
+    question: "How can you detect a phishing email?",
+    choices: ["Good spelling", "Unusual sender, bad grammar, strange URLs", "Company logo", "Bold text"],
+    correct: 1,
+    explanation: "Watch for suspicious URLs and poor grammar."
+  },
+  {
+    question: "How can companies reduce phishing risk?",
+    choices: ["No email use", "Only social media", "Employee training and email filters", "Ignore it"],
+    correct: 2,
+    explanation: "Email filters help catch phishing attempts."
+  },
+   {
+    question: "What does it mean to hover over a link?",
+    choices: ["Click fast", "Scroll fast", "Place mouse over link to view real URLs", "Print it"],
+    correct: 2,
+    explanation: "Hovering over a link shows where it actually goes."
+  },
+    {
+    question: "Whats wrong with opening email attachments from unknown senders?",
+    choices: ["Annoying", "Uses memory", "None", "Can contain malware"],
+    correct: 3,
+    explanation: "Dont open attachments unless youre sure theyre safe."
+  },
+   {
+    question: "Whats wrong with opening email attachments from unknown senders?",
+    choices: ["Annoying", "Uses memory", "None", "Can contain malware"],
+    correct: 3,
+    explanation: "Dont open attachments unless youre sure theyre safe."
+  },
+  {
+    question: "What’s a phishing website?",
+    choices: ["A safe page", "A fake site pretending to be real", "A tech blog", "A social media site"],
+    correct: 1,
+    explanation: "Phishing sites impersonate legitimate ones to steal data."
+  },
+   {
+    question: "What’s a good habit for device security?",
+    choices: ["Always click “remind me later” for updates", "Regular software updates", "Ignore warnings", "Share your device"],
+    correct: 2,
+    explanation: "Updates fix vulnerabilities, improving device security"
+  },
+   {
+    question: "How can you avoid malware from apps?",
+    choices: ["Download only from official stores", "Try all new apps", "Get free versions from forums", "Click unknown links device"],
+    correct: 0,
+    explanation: "Official stores screen apps for security."
+  },
+   {
+    question: "What’s the best way to protect files on a lost device?",
+    choices: ["Leave them open", "Use encryption and lock screen", "Save in Downloads", "Email them to a friend"],
+    correct: 1,
+    explanation: "Encryption and screen locks prevent access if stolen."
+  },
+    {
+    question: "Why is posting your location risky?",
+    choices: ["Friends might visit", "May attract burglars or stalkers", "Increases likes", "Shows cool places"],
+    correct: 1,
+    explanation: "Real-time location sharing can lead to safety and theft risks."
+  },
+   {
+    question: "What is an example of sensitive data?",
+    choices: ["ID number", "Favorite color", "Game score", "Favorite food"],
+    correct: 0,
+    explanation: "ID numbers are personal and must be kept secure."
+  },
+   {
+    question: "How can you protect your home Wi-Fi?",
+    choices: ["Leave default settings", "Set a strong password and rename SSID", "Use neighbors’ Wi-Fi", "Hide the router"],
+    correct: 1,
+    explanation: "Customizing and securing Wi-Fi access protects your network."
+  },
+   {
+    question: "What can hackers do with stolen personal data?",
+    choices: ["Delete your photos", "Commit fraud or identity theft", "Watch movies", "Nothing"],
+    correct: 1,
+    explanation: "Stolen data can be used to open accounts or impersonate you."
+  },
+   {
+    question: "Why is using your pet’s name risky as a password?",
+    choices: ["Cute but guessable", "Hard to remember", "Too long", "Can’t type it"],
+    correct: 0,
+    explanation: "Pet names are often publicly known or guessed."
+  },
+    {
+    question: "What’s the safest way to store passwords?",
+    choices: ["Paper", "Sticky notes", "Email draft", "Password manager"],
+    correct: 3,
+    explanation: "Pet names are often publicly known or guessed."
+  },
+  {
+    question: "When should you give your personal info online?",
+    choices: ["Anytime it's asked", "Only on trusted, secure sites", "On forums", "In public Wi-Fi"],
+    correct: 1,
+    explanation: "Only give data to verified, secure websites.."
+  },
+   {
+    question: "What is data privacy?",
+    choices: ["Hiding your photos", "Keeping personal info safe from misuse, secure sites", "Clearing your inbox", "Using passwords"],
+    correct: 1,
+    explanation: "Privacy is about controlling who accesses your personal info."
+  },
+   {
+    question: "What is a secure way to back up data?",
+    choices: ["Save on desktop", "Only email it to yourself", "Cloud + encrypted USB", "Print it"],
+    correct: 2,
+    explanation: "Encrypted, redundant backups are most secure."
+  },
+   {
+    question: "Which device needs antivirus?",
+    choices: ["Only desktops", "All devices", "Only Android and Iphone", "None"],
+    correct: 1,
+    explanation: "All connected devices can be targeted by malware."
+  },
+     {
+    question: "Why shouldn’t you share work passwords?",
+    choices: ["Teamwork matters", "It violates security policies", "Speeds up workflow", "Everyone does it"],
+    correct: 1,
+    explanation: "Password sharing increases security risk."
+  },
+   {
+    question: "What should you do if your account is hacked?",
+    choices: ["Change password and report", "Ignore it", "Post about it", "	Delete all emails"],
+    correct: 0,
+    explanation: "Immediate action minimizes further damage."
+  },
+    {
+    question: "What can you do to avoid tracking online?",
+    choices: ["Use incognito mode", "Use strong passwords", "Never use the internet", "Share cookies"],
+    correct: 0,
+    explanation: "Incognito reduces local tracking but not all web tracking."
+  },
+  {
+    question: "What should you do before disposing of old computers or phones?",
+    choices: ["Throw in trash", "Remove battery", "Wipe all data", "Sell it immediately"],
+    correct: 2,
+    explanation: "Always securely erase all data before disposal."
+  },
+    {
+    question: "What is identity theft?",
+    choices: ["Using another’s Wi-Fi", "Sending spam", "Phishing emails", "	Stealing and using someone’s personal info"],
+    correct: 3,
+    explanation: "Identity theft uses stolen personal data for fraud."
+  },
+  {
+    question: "Which action helps secure your smartphone?",
+    choices: ["Leave it unlocked", "Use fingerprint or passcode", "Disable updates", "Share it with friends"],
+    correct: 1,
+    explanation: "Device locks protect data if your phone is lost or stolen."
+  },
+  {
+    question: "What’s a good privacy setting on social media?",
+    choices: ["Everything public", "Share with friends only", "Friends of friends", "Share with world"],
+    correct: 1,
+    explanation: "Limiting posts to friends reduces exposure of private info."
+  },
+   {
+    question: "What is the safest way to dispose of a sensitive document?",
+    choices: ["Shred it", "Throw in bin", "Recycle it", "Burn it"],
+    correct: 0,
+    explanation: "Shredding prevents dumpster diving and info theft."
+  },
+    {
+    question: "Which type of email attachment is safest to open?",
+    choices: ["From an unknown sender", ".exe file", "Expected file from known contact", "Blank subject email"],
+    correct: 2,
+    explanation: "Only open attachments from trusted senders you were expecting."
+  },
+     {
+    question: "What is social engineering?",
+    choices: ["Programming trick", "Manipulating people to give up confidential info", "An HR techniquet", "Building security systems"],
+    correct: 1,
+    explanation: "Only open attachments from trusted senders you were expecting."
+  },
+     {
+    question: "Why is public Wi-Fi risky?",
+    choices: ["It’s slow", "It can expose your data to attackers", "It’s public	", "It blocks Netflix"],
+    correct: 1,
+    explanation: "Public Wi-Fi can be intercepted by hackers monitoring traffic"
+  },
+    {
+    question: "What should you avoid posting online?",
+    choices: ["Your travel plans", "Pet names", "Favorite color", "Hobbies"],
+    correct: 0,
+    explanation: "Announcing travel online increases physical and digital risk."
+  },
+    {
+    question: "Which of the following is a phishing attempt?",
+    choices: ["Email from your boss asking for meeting", "Bank email asking you to verify your account by clicking a link", "Newsletter you subscribed to", "Email with a weekly recipe"],
+    correct: 2,
+    explanation: "Phishing tricks you into clicking malicious links or giving info."
+  },
+    {
+    question: "What is a secure connection indicator in a browser?",
+    choices: ["http://", "Red lock", "No icon", "Padlock and https://"],
+    correct: 3,
+    explanation: "HTTPS and a padlock show encrypted, secure communication."
+  },
+  {
+    question: "What is a VPN(Virtual Private Network) used for?",
+    choices: ["Virus protection", "Encrypting internet connection", "Speeding up internet", "Installing apps"],
+    correct: 1,
+    explanation: "VPN secures your internet activity, especially on public Wi-Fi."
+  },
+];
+
+function showQuiz(index) {
+  const q = quizQuestions[index % quizQuestions.length];
+  if (!q) return;
+
+  document.getElementById("quizQuestion").innerText = q.question;
+  const choicesDiv = document.getElementById("quizChoices");
+  const correctAnswerDiv = document.getElementById("correctAnswer");
+  correctAnswerDiv.innerHTML = "";
+  choicesDiv.innerHTML = "";
+
+  q.choices.forEach((choice, i) => {
+    const btn = document.createElement("button");
+    btn.innerText = choice;
+    btn.onclick = function () {
+      if (i === q.correct) {
+        btn.style.backgroundColor = "green";
+        correctAnswerDiv.innerHTML = "<span style='color: lightgreen;'>You are correct!</span>";
+      } else {
+        btn.style.backgroundColor = "red";
+        correctAnswerDiv.innerHTML = "Correct answer: <b>" + q.choices[q.correct] + "</b>";
+      }
+
+      // Add Explanation Button
+      const explainBtn = document.createElement("button");
+      explainBtn.innerText = "Show Explanation";
+      explainBtn.style.marginTop = "15px";
+      explainBtn.onclick = function () {
+        correctAnswerDiv.innerHTML += "<br><br><i>" + q.explanation + "</i>";
+        explainBtn.disabled = true;
+      };
+      correctAnswerDiv.appendChild(document.createElement("br"));
+      correctAnswerDiv.appendChild(explainBtn);
+    };
+    choicesDiv.appendChild(btn);
+  });
+
+  document.getElementById("quizModal").style.display = "flex";
+}
+
+
+
+    function closeQuiz() {
+      document.getElementById("quizModal").style.display = "none";
+    }
+
+    function randomColor() {
+      r = Math.floor(Math.random() * 255);
+      g = Math.floor(Math.random() * 255);
+      b = Math.floor(Math.random() * 255);
+      return { r, g, b }
+    }
+
+    function toRad(deg) {
+      return deg * (Math.PI / 180.0);
+    }
+
+    function randomRange(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function easeOutSine(x) {
+      return Math.sin((x * Math.PI) / 2);
+    }
+
+    function getPercent(input, min, max) {
+      return (((input - min) * 100) / (max - min)) / 100
+    }
+
+    const canvas = document.getElementById("canvas")
+    const ctx = canvas.getContext("2d")
+    const width = canvas.width
+    const height = canvas.height
+
+    const centerX = width / 2
+    const centerY = height / 2
+    const radius = width / 2
+
+    let items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
+    let currentDeg = 0
+    let step = 360 / items.length
+    let colors = []
+    let itemDegs = {}
+    let winnerIndex = -1;
+
+    for (let i = 0; i < items.length + 1; i++) {
+      colors.push(randomColor())
+    }
+
+    function createWheel() {
+      items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
+      step = 360 / items.length
+      colors = []
+      for (let i = 0; i < items.length + 1; i++) {
+        colors.push(randomColor())
+      }
+      draw()
+    }
+
+    draw()
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, toRad(0), toRad(360))
+      ctx.fillStyle = `rgb(33,33,33)`
+      ctx.lineTo(centerX, centerY);
+      ctx.fill()
+
+      let startDeg = currentDeg;
+      for (let i = 0; i < items.length; i++, startDeg += step) {
+        let endDeg = startDeg + step
+        color = colors[i]
+        let colorStyle = `rgb(${color.r},${color.g},${color.b})`
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius - 2, toRad(startDeg), toRad(endDeg))
+        let colorStyle2 = `rgb(${color.r - 30},${color.g - 30},${color.b - 30})`
+        ctx.fillStyle = colorStyle2
+        ctx.lineTo(centerX, centerY);
+        ctx.fill()
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius - 30, toRad(startDeg), toRad(endDeg))
+        ctx.fillStyle = colorStyle
+        ctx.lineTo(centerX, centerY);
+        ctx.fill()
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(toRad((startDeg + endDeg) / 2));
+        ctx.textAlign = "center";
+        ctx.fillStyle = (color.r > 150 || color.g > 150 || color.b > 150) ? "#000" : "#fff";
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(items[i], 130, 10);
+        ctx.restore();
+
+        itemDegs[i] = {
+          label: items[i],
+          startDeg: startDeg,
+          endDeg: endDeg
+        }
+      }
+    }
+
+    let speed = 0
+    let maxRotation = randomRange(360 * 4, 360 * 6)
+    let pause = false
+    let animationId
+
+    function animate() {
+      if (pause) return;
+      speed = easeOutSine(getPercent(currentDeg, maxRotation, 0)) * 20
+      if (speed < 0.01) {
+        speed = 0
+        pause = true
+        showWinner()
+        return;
+      }
+      currentDeg += speed
+      draw()
+      animationId = window.requestAnimationFrame(animate);
+    }
+
+ function showWinner() {
+  let normalizedDeg = (currentDeg % 360 + 270) % 360; // Align with pointer
+  let stepDeg = 360 / items.length;
+  let winnerIdx = Math.floor(normalizedDeg / stepDeg);
+  winnerIdx = (winnerIdx + 1) % items.length; // Fix off-by-one shift
+  document.getElementById("winner").innerText = items[winnerIdx];
+  showQuiz(winnerIdx);
+}
+
+
+    function spin() {
+      if (speed != 0) return;
+      cancelAnimationFrame(animationId);
+      maxRotation = 0;
+      currentDeg = 0;
+      createWheel();
+      draw();
+      maxRotation = randomRange(360 * 4, 360 * 7);
+      itemDegs = {};
+      pause = false;
+      winnerIndex = -1;
+      window.requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
