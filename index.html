@@ -92,30 +92,100 @@
       background: #555;
     }
 
+    #quizChoices button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     #correctAnswer {
       margin-top: 15px;
       color: green;
       font-weight: bold;
     }
+
+    /* Timer styles */
+    #quizTimer {
+      font-size: 24px;
+      margin: 10px 0;
+      color: #ff9900;
+      font-weight: bold;
+    }
+
+    .times-up {
+      color: red;
+      font-weight: bold;
+    }
+
+    .correct-answer {
+      color: lightgreen;
+    }
+    
+    /* Game controls */
+    .game-controls {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    #spinButton {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    #spinButton:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    
+    #resetButton {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    
+    #scoreDisplay {
+      font-size: 20px;
+      margin: 15px 0;
+    }
+    
+    #spinsLeft {
+      font-size: 20px;
+      margin: 15px 0;
+      color: #ff9900;
+    }
   </style>
 </head>
 <body>
- <div class="header">
+<div class="header">
   <h1> Privacy and Security Awareness Quiz</h1>
-  <h1 style="display: none;">WINNER</h1>
   <p id="winner" style="display: none;">NONE</p>
 </div>
 
+<div class="game-controls">
+  <button id="spinButton" onclick="spin()">Spin Wheel</button>
+  <button id="resetButton" onclick="resetGame()">Reset Game</button>
+  <div id="scoreDisplay">Score: 0/0</div>
+  <div id="spinsLeft">Spins left: 3</div>
+</div>
 
-  <div class="wheel">
-    <canvas id="canvas" width="500" height="500"></canvas>
-    <div class="center-circle" onclick="spin()">
-      <div class="triangle"></div>
-    </div>
+<div class="wheel">
+  <canvas id="canvas" width="500" height="500"></canvas>
+  <div class="center-circle">
+    <div class="triangle"></div>
   </div>
+</div>
 
-  <div class="inputArea" onchange="createWheel()" style="display: none;">
-    <textarea rows="20" cols="30">
+<div class="inputArea" onchange="createWheel()" style="display: none;">
+  <textarea rows="20" cols="30">
 Q1
 Q2
 Q3
@@ -167,20 +237,72 @@ Q47
 Q48
 Q49
 Q50
+Q51
+Q52
+Q53
+Q54
+Q55
+Q56
+Q57
+Q58
+Q59
+Q60
+Q61
+Q62
+Q63
+Q64
+Q65
+Q66
+Q67
+Q68
+Q69
+Q70
+Q71
+Q72
+Q73
+Q74
+Q75
 </textarea>
-  </div>
+</div>
 
-  <div id="quizModal">
-    <div class="content">
-      <h2 id="quizQuestion"></h2>
-      <div id="quizChoices"></div>
-      <div id="correctAnswer"></div>
-      <button onclick="closeQuiz()" style="margin-top:20px;">Close</button>
-    </div>
+<div id="quizModal">
+  <div class="content">
+    <h2 id="quizQuestion"></h2>
+    <div id="quizTimer">Time left: 10s</div>
+    <div id="quizChoices"></div>
+    <div id="correctAnswer"></div>
+    <button onclick="closeQuiz()" style="margin-top:20px;">Close</button>
   </div>
+</div>
 
-  <script>
-    const quizQuestions = [
+<script>
+  // Game state variables
+  let spinsLeft = 3;
+  let score = 0;
+  let questionsAttempted = 0;
+  
+  // Update the game display
+  function updateGameDisplay() {
+    document.getElementById('scoreDisplay').textContent = `Score: ${score}/${questionsAttempted}`;
+    document.getElementById('spinsLeft').textContent = `Spins left: ${spinsLeft}`;
+    
+    if (spinsLeft <= 0) {
+      document.getElementById('spinButton').disabled = true;
+    } else {
+      document.getElementById('spinButton').disabled = false;
+    }
+  }
+  
+  // Reset the game
+  function resetGame() {
+    spinsLeft = 3;
+    score = 0;
+    questionsAttempted = 0;
+    updateGameDisplay();
+    document.getElementById('spinButton').disabled = false;
+  }
+
+  const quizQuestions = [
   {
     question: "What is phishing?",
     choices: ["A type of firewall", "A fake message to trick you", "Encrypted data", "A password manager"],
@@ -307,12 +429,7 @@ Q50
     correct: 3,
     explanation: "Dont open attachments unless youre sure theyre safe."
   },
-   {
-    question: "Whats wrong with opening email attachments from unknown senders?",
-    choices: ["Annoying", "Uses memory", "None", "Can contain malware"],
-    correct: 3,
-    explanation: "Dont open attachments unless youre sure theyre safe."
-  },
+
   {
     question: "What’s a phishing website?",
     choices: ["A safe page", "A fake site pretending to be real", "A tech blog", "A social media site"],
@@ -321,7 +438,7 @@ Q50
   },
    {
     question: "What’s a good habit for device security?",
-    choices: ["Always click “remind me later” for updates", "Regular software updates", "Ignore warnings", "Share your device"],
+    choices: ["Always click remind me later for updates", "Regular software updates", "Ignore warnings", "Share your device"],
     correct: 1,
     explanation: "Updates fix vulnerabilities, improving device security"
   },
@@ -367,12 +484,7 @@ Q50
     correct: 0,
     explanation: "Pet names are often publicly known or guessed."
   },
-    {
-    question: "What’s the safest way to store passwords?",
-    choices: ["Paper", "Sticky notes", "Email draft", "Password manager"],
-    correct: 3,
-    explanation: "Password managers help store and manage secure passwords.."
-  },
+   
   {
     question: "When should you give your personal info online?",
     choices: ["Anytime it's asked", "Only on trusted, secure sites", "On forums", "In public Wi-Fi"],
@@ -487,194 +599,441 @@ Q50
     correct: 1,
     explanation: "VPN secures your internet activity, especially on public Wi-Fi."
   },
+   {
+    question: "Which of the following is the most secure password policy?",
+    choices: ["Changing passwords every 30 days", "Using complex passwords and enabling multi-factor authentication (MFA)", "Writing down passwords to remember them", "Using the same password across multiple accounts for convenience"],
+    correct: 1,
+    explanation: "Complex passwords combined with MFA ensure strong security by adding multiple layers of protection."
+  },
+  {
+    question: "What does zero-trust security mean?",
+    choices: ["All internal employees are trusted by default", "Only external users need verification", "Continuous verification is required for users and devices", "Trust is granted once after login"],
+    correct: 2,
+    explanation: "Zero-trust assumes no user or device is automatically trusted, requiring ongoing authentication."
+  },
+   {
+    question: "A company uses role-based access control (RBAC) to manage permissions. What is the primary benefit?",
+    choices: ["Reducing insider threats by restricting access", "Allowing all employees to access sensitive data", "Making security policies optional", "Encrypting all internal communications"],
+    correct: 0,
+    explanation: "RBAC ensures employees only have access to data necessary for their roles, reducing the risk of insider threats."
+  },
+  {
+    question: "What is the main weakness of biometric authentication?",
+    choices: ["It can never be compromised", "Biometric data cannot be changed if stolen", "It requires users to memorize complex patterns", "It is slower than password-based authentication"],
+    correct: 1,
+    explanation: "Unlike passwords, biometric data (e.g., fingerprints) cannot be reset, making breaches more damaging."
+  },
+    {
+    question: "What is the primary security risk of using public Wi-Fi for work tasks?",
+    choices: ["Slow internet speed", "Increased exposure to man-in-the-middle attacks", "Limited access to corporate applications", "High cost of data usage"],
+    correct: 1,
+    explanation: "Attackers can intercept data transmitted over unsecured networks, potentially stealing sensitive information"
+  },
+    {
+    question: "What is the primary goal of a phishing attack?",
+    choices: ["To steal sensitive information by tricking users", "To damage physical network infrastructure", "To encrypt files for safe storage", "To increase internet bandwidth"],
+    correct: 0,
+    explanation: "Phishing relies on deception to steal credentials or personal data from unsuspecting users."
+  },
+    {
+    question: "How can an attacker exploit a SQL injection vulnerability?",
+    choices: ["By injecting malicious code into a database query", "By tricking employees into clicking phishing links", "By exploiting weak Wi-Fi encryption", "By performing a denial-of-service (DoS) attack"],
+    correct: 0,
+    explanation: "SQL injection allows attackers to manipulate databases, potentially extracting or altering sensitive data."
+  },
+   {
+    question: "Which of the following is an example of ransomware behavior?",
+    choices: ["Encrypting files and demanding payment for decryption", "Stealing data and selling it on the dark web", "Creating fake websites to steal login credentials", "Scanning devices for vulnerabilities"],
+    correct: 0,
+    explanation: "Ransomware locks files and demands payment, often in cryptocurrency, to restore access."
+  },
+    {
+    question: "Why is a zero-day vulnerability difficult to defend against?",
+    choices: ["It is not yet known to the vendor, leaving systems unpatched", "It is only exploitable in outdated operating systems", "It is easy to detect using basic antivirus software", "It requires human verification before being exploited"],
+    correct: 0,
+    explanation: "Zero-day exploits target vulnerabilities before vendors release patches, making proactive defense crucial."
+  },
+    {
+    question: "What is the purpose of a Distributed Denial-of-Service (DDoS) attack?",
+    choices: ["To install malware on employee devices", "To flood a system with traffic and make it unavailable", "To steal sensitive data from encrypted storage", "To increase internet speed in cloud environments"],
+    correct: 1,
+    explanation: "DDoS attacks overwhelm servers with excessive requests, disrupting normal operations."
+  },
+  {
+    question: "Which principle is central to GDPR?",
+    choices: ["Increasing ad targeting efficiency", "Minimizing the collection of personal data", "Preventing cybersecurity training in organizations", "Allowing indefinite data storage"],
+    correct: 1,
+    explanation: "GDPR mandates organizations to limit the collection and retention of personal data for privacy protection."
+  },
+  {
+    question: "Under HIPAA, what type of information is protected?",
+    choices: ["Public financial data", "Electronic health information (ePHI)", "Social media accounts", "Encrypted files stored on personal devices"],
+    correct: 1,
+    explanation: "HIPAA regulations safeguard patient health records, ensuring confidentiality and secure handling"
+  },
+   {
+    question: "What does data masking help prevent?",
+    choices: ["Unauthorized users from seeing sensitive data", "Brute-force attacks on encrypted passwords", "Increased network latency", "Physical theft of company devices"],
+    correct: 0,
+    explanation: "Data masking conceals sensitive data using placeholder values to prevent unauthorized access."
+  },
+    {
+    question: "How does end-to-end encryption enhance security?",
+    choices: ["It prevents unauthorized access by encrypting data during transit", "It speeds up network connectivity", "It allows third parties to scan encrypted messages", "It replaces firewalls in a security infrastructure"],
+    correct: 0,
+    explanation: "End-to-end encryption ensures data remains secure while being transmitted between sender and receiver."
+  },
+  {
+    question: "Why should companies implement network segmentation?",
+    choices: ["To isolate sensitive systems from potential threats", "To increase internet browsing speeds", "To allow unrestricted employee access to company databases", "To disable firewall protections temporarily"],
+    correct: 0,
+    explanation: "Segmentation prevents unauthorized access between network sections, reducing attack risks."
+  },
+  {
+    question: "How do quantum computers threaten encryption?",
+    choices: ["They can break traditional encryption methods much faster", "They can store unlimited data", "They prevent denial-of-service (DoS) attacks", "They increase processing speeds without affecting security"],
+    correct: 0,
+    explanation: "Quantum computing could crack encryption algorithms significantly faster than conventional computers."
+  },
+  {
+    question: "What type of attack does browser fingerprinting enable?",
+    choices: ["Tracking users based on unique browser details", "Exploiting vulnerabilities in firewall configurations", "Encrypting emails for enhanced privacy", "Redirecting web traffic through malicious DNS servers"],
+    correct: 0,
+    explanation: "Browser fingerprinting collects unique details about a user’s browser setup to track them without cookies.."
+  },
+   {
+    question: "What action should employees take after receiving a data breach notification?",
+    choices: ["Change passwords and enable multi-factor authentication", "Ignore the notification and continue working", "Forward the email to coworkers for awareness", "Delete sensitive files from their device"],
+    correct: 0,
+    explanation: "Taking immediate security actions, like updating credentials, reduces post-breach risks."
+  },
+  {
+    question: "Which of the following actions can lead to data leakage?",
+    choices: ["Sending confidential work documents to a personal email account", "Using a company-approved encrypted messaging tool", "Clearing browsing history regularly", "Using multi-factor authentication (MFA)"],
+    correct: 0,
+    explanation: "Sending sensitive files outside official company systems can expose them to unauthorized access."
+  },
+   {
+    question: "What should employees do if they suspect a security breach?",
+    choices: ["Investigate it themselves before reporting it", "Ignore it unless it affects their own work", "Immediately report it to IT/security teams", "Delete all files from their computer"],
+    correct: 2,
+    explanation: "Reporting incidents quickly helps security teams take proactive steps to minimize risks."
+  },
+    {
+    question: "Why should employees avoid using public Wi-Fi for work-related activities?",
+    choices: ["Public Wi-Fi is slower than office networks", "Public Wi-Fi can expose sensitive data to cybercriminals", "It does not allow access to personal accounts", "It makes online transactions faster"],
+    correct: 1,
+    explanation: "Public Wi-Fi is often unsecured, making it easy for attackers to intercept traffic and steal data"
+  },
+  {
+    question: "What is the best way to identify a legitimate company email?",
+    choices: ["By checking the sender’s email domain and verifying the message content", "By clicking on any embedded links to confirm authenticity", "By forwarding the email to coworkers for validation", "By assuming emails from a supervisor are always safe"],
+    correct: 0,
+    explanation: "Attackers often spoof email addresses, so verifying the sender and content is crucial to spotting phishing."
+  },
+  {
+    question: "What is a VPN primarily used for?",
+    choices: ["Encrypting internet traffic to enhance privacy", "Preventing malware infections", "Storing passwords securely", "Making Wi-Fi connections faster"],
+    correct: 0,
+    explanation: "A VPN secures data transmission by encrypting traffic, reducing the risk of interception on public networks."
+  },
+    {
+    question: "Why is zero-day exploit detection particularly difficult?",
+    choices: ["It requires human security analysts to manually scan networks", "It relies only on antivirus software updates", "It uses behavioral analysis to identify suspicious activity", "It automatically prevents attacks without security policies"],
+    correct: 2,
+    explanation: "Zero-day vulnerabilities have no prior signatures, so detection relies on anomaly-based threat analysis rather than traditional methods."
+  },
+     {
+    question: "Which privacy threat is posed by AI-driven profiling?",
+    choices: ["Targeted advertising without user consent", "Stronger identity verification methods", "More secure financial transactions", "Automatic password protection"],
+    correct: 0,
+    explanation: "AI-driven profiling gathers and analyzes user data, often leading to personalized but intrusive advertising or decision-making without explicit consent."
+  },
+    {
+    question: "What cybersecurity challenge does edge computing introduce?",
+    choices: ["Increased attack surfaces due to decentralized data processing", "Stronger encryption than traditional cloud security", "Lower risk of insider threats", "Fewer vulnerabilities because of isolated data"],
+    correct: 0,
+    explanation: "Edge computing distributes data processing across multiple devices, increasing potential entry points for attackers."
+  },
+  {
+    question: "What is homomorphic encryption designed for?",
+    choices: ["Encrypting data only when stored", "Performing computations on encrypted data without decrypting it", "Preventing phishing emails from being received", "Hiding usernames in online accounts"],
+    correct: 1,
+    explanation: "Homomorphic encryption allows data to remain encrypted while being processed, making it ideal for secure cloud computing."
+  },
+ 
 ];
 
-function showQuiz(index) {
-  const q = quizQuestions[index % quizQuestions.length];
-  if (!q) return;
+  // Timer variables
+  let timer;
+  let timeLeft = 10;
+  let currentQuestionIndex = 0;
 
-  document.getElementById("quizQuestion").innerText = q.question;
-  const choicesDiv = document.getElementById("quizChoices");
-  const correctAnswerDiv = document.getElementById("correctAnswer");
-  correctAnswerDiv.innerHTML = "";
-  choicesDiv.innerHTML = "";
+  function showQuiz(index) {
+    currentQuestionIndex = index % quizQuestions.length;
+    const q = quizQuestions[currentQuestionIndex];
+    if (!q) return;
 
-  q.choices.forEach((choice, i) => {
-    const btn = document.createElement("button");
-    btn.innerText = choice;
-    btn.onclick = function () {
-      if (i === q.correct) {
-        btn.style.backgroundColor = "green";
-        correctAnswerDiv.innerHTML = "<span style='color: lightgreen;'>You are correct!</span>";
-      } else {
-        btn.style.backgroundColor = "red";
-        correctAnswerDiv.innerHTML = "Correct answer: <b>" + q.choices[q.correct] + "</b>";
-      }
+    document.getElementById("quizQuestion").innerText = q.question;
+    const choicesDiv = document.getElementById("quizChoices");
+    const correctAnswerDiv = document.getElementById("correctAnswer");
+    correctAnswerDiv.innerHTML = "";
+    choicesDiv.innerHTML = "";
+    
+    // Reset and start timer
+    resetTimer();
+    startTimer(q);
 
-      // Add Explanation Button
-      const explainBtn = document.createElement("button");
-      explainBtn.innerText = "Show Explanation";
-      explainBtn.style.marginTop = "15px";
-      explainBtn.onclick = function () {
-        correctAnswerDiv.innerHTML += "<br><br><i>" + q.explanation + "</i>";
-        explainBtn.disabled = true;
+    q.choices.forEach((choice, i) => {
+      const btn = document.createElement("button");
+      btn.innerText = choice;
+      btn.onclick = function() {
+        clearInterval(timer);
+        handleAnswerSelection(i, q, btn, correctAnswerDiv);
       };
-      correctAnswerDiv.appendChild(document.createElement("br"));
-      correctAnswerDiv.appendChild(explainBtn);
+      choicesDiv.appendChild(btn);
+    });
+
+    document.getElementById("quizModal").style.display = "flex";
+  }
+
+  function resetTimer() {
+    timeLeft = 12;
+    updateTimerDisplay();
+  }
+
+  function startTimer(q) {
+    clearInterval(timer);
+    timer = setInterval(function() {
+      timeLeft--;
+      updateTimerDisplay();
+      
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        timeOutQuestion(q);
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const timerElement = document.getElementById("quizTimer");
+    timerElement.innerText = `Time left: ${timeLeft}s`;
+    
+    if (timeLeft <= 3) {
+      timerElement.style.color = "red";
+    } else {
+      timerElement.style.color = "#ff9900";
+    }
+  }
+
+  function handleAnswerSelection(selectedIndex, q, selectedButton, correctAnswerDiv) {
+    questionsAttempted++;
+    
+    // Disable all buttons
+    const buttons = document.querySelectorAll("#quizChoices button");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.innerText === q.choices[q.correct]) {
+        btn.style.backgroundColor = "green";
+      }
+    });
+
+    if (selectedIndex === q.correct) {
+      score++;
+      selectedButton.style.backgroundColor = "green";
+      correctAnswerDiv.innerHTML = "<span class='correct-answer'>You are correct!</span>";
+    } else {
+      selectedButton.style.backgroundColor = "red";
+      correctAnswerDiv.innerHTML = "Correct answer: <b>" + q.choices[q.correct] + "</b>";
+    }
+
+    updateGameDisplay();
+    addExplanationButton(q, correctAnswerDiv);
+  }
+
+  function timeOutQuestion(q) {
+    questionsAttempted++;
+    updateGameDisplay();
+    
+    const correctAnswerDiv = document.getElementById("correctAnswer");
+    correctAnswerDiv.innerHTML = "<span class='times-up'>TIME'S UP!</span><br>Correct answer: <b>" + q.choices[q.correct] + "</b>";
+    
+    // Disable all buttons and highlight correct answer
+    const buttons = document.querySelectorAll("#quizChoices button");
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      if (btn.innerText === q.choices[q.correct]) {
+        btn.style.backgroundColor = "green";
+      }
+    });
+    
+    addExplanationButton(q, correctAnswerDiv);
+  }
+
+  function addExplanationButton(q, correctAnswerDiv) {
+    const explainBtn = document.createElement("button");
+    explainBtn.innerText = "Show Explanation";
+    explainBtn.style.marginTop = "15px";
+    explainBtn.onclick = function() {
+      correctAnswerDiv.innerHTML += "<br><br><i>" + q.explanation + "</i>";
+      explainBtn.disabled = true;
     };
-    choicesDiv.appendChild(btn);
-  });
+    correctAnswerDiv.appendChild(document.createElement("br"));
+    correctAnswerDiv.appendChild(explainBtn);
+  }
 
-  document.getElementById("quizModal").style.display = "flex";
-}
+  function closeQuiz() {
+    clearInterval(timer);
+    document.getElementById("quizModal").style.display = "none";
+  }
 
+  function randomColor() {
+    r = Math.floor(Math.random() * 255);
+    g = Math.floor(Math.random() * 255);
+    b = Math.floor(Math.random() * 255);
+    return { r, g, b }
+  }
 
+  function toRad(deg) {
+    return deg * (Math.PI / 180.0);
+  }
 
-    function closeQuiz() {
-      document.getElementById("quizModal").style.display = "none";
-    }
+  function randomRange(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
 
-    function randomColor() {
-      r = Math.floor(Math.random() * 255);
-      g = Math.floor(Math.random() * 255);
-      b = Math.floor(Math.random() * 255);
-      return { r, g, b }
-    }
+  function easeOutSine(x) {
+    return Math.sin((x * Math.PI) / 2);
+  }
 
-    function toRad(deg) {
-      return deg * (Math.PI / 180.0);
-    }
+  function getPercent(input, min, max) {
+    return (((input - min) * 100) / (max - min)) / 100
+  }
 
-    function randomRange(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+  const canvas = document.getElementById("canvas")
+  const ctx = canvas.getContext("2d")
+  const width = canvas.width
+  const height = canvas.height
 
-    function easeOutSine(x) {
-      return Math.sin((x * Math.PI) / 2);
-    }
+  const centerX = width / 2
+  const centerY = height / 2
+  const radius = width / 2
 
-    function getPercent(input, min, max) {
-      return (((input - min) * 100) / (max - min)) / 100
-    }
+  let items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
+  let currentDeg = 0
+  let step = 360 / items.length
+  let colors = []
+  let itemDegs = {}
+  let winnerIndex = -1;
 
-    const canvas = document.getElementById("canvas")
-    const ctx = canvas.getContext("2d")
-    const width = canvas.width
-    const height = canvas.height
+  for (let i = 0; i < items.length + 1; i++) {
+    colors.push(randomColor())
+  }
 
-    const centerX = width / 2
-    const centerY = height / 2
-    const radius = width / 2;
-
-    let items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
-    let currentDeg = 0
-    let step = 360 / items.length
-    let colors = []
-    let itemDegs = {}
-    let winnerIndex = -1;
-
+  function createWheel() {
+    items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
+    step = 360 / items.length
+    colors = []
     for (let i = 0; i < items.length + 1; i++) {
       colors.push(randomColor())
     }
-
-    function createWheel() {
-      items = document.getElementsByTagName("textarea")[0].value.trim().split("\n");
-      step = 360 / items.length
-      colors = []
-      for (let i = 0; i < items.length + 1; i++) {
-        colors.push(randomColor())
-      }
-      draw()
-    }
-
     draw()
+  }
 
-    function draw() {
-      ctx.clearRect(0, 0, width, height);
+  draw()
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, toRad(0), toRad(360))
+    ctx.fillStyle = `rgb(33,33,33)`
+    ctx.lineTo(centerX, centerY);
+    ctx.fill()
+
+    let startDeg = currentDeg;
+    for (let i = 0; i < items.length; i++, startDeg += step) {
+      let endDeg = startDeg + step
+      color = colors[i]
+      let colorStyle = `rgb(${color.r},${color.g},${color.b})`
+
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius, toRad(0), toRad(360))
-      ctx.fillStyle = `rgb(33,33,33)`
+      ctx.arc(centerX, centerY, radius - 2, toRad(startDeg), toRad(endDeg))
+      let colorStyle2 = `rgb(${color.r - 30},${color.g - 30},${color.b - 30})`
+      ctx.fillStyle = colorStyle2
       ctx.lineTo(centerX, centerY);
       ctx.fill()
 
-      let startDeg = currentDeg;
-      for (let i = 0; i < items.length; i++, startDeg += step) {
-        let endDeg = startDeg + step
-        color = colors[i]
-        let colorStyle = `rgb(${color.r},${color.g},${color.b})`
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 30, toRad(startDeg), toRad(endDeg))
+      ctx.fillStyle = colorStyle
+      ctx.lineTo(centerX, centerY);
+      ctx.fill()
 
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius - 2, toRad(startDeg), toRad(endDeg))
-        let colorStyle2 = `rgb(${color.r - 30},${color.g - 30},${color.b - 30})`
-        ctx.fillStyle = colorStyle2
-        ctx.lineTo(centerX, centerY);
-        ctx.fill()
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(toRad((startDeg + endDeg) / 2));
+      ctx.textAlign = "center";
+      ctx.fillStyle = (color.r > 150 || color.g > 150 || color.b > 150) ? "#000" : "#fff";
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(items[i], 180, 10);
+      ctx.restore();
 
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius - 30, toRad(startDeg), toRad(endDeg))
-        ctx.fillStyle = colorStyle
-        ctx.lineTo(centerX, centerY);
-        ctx.fill()
-
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(toRad((startDeg + endDeg) / 2));
-        ctx.textAlign = "center";
-        ctx.fillStyle = (color.r > 150 || color.g > 150 || color.b > 150) ? "#000" : "#fff";
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText(items[i], 200, 10);
-        ctx.restore();
-
-        itemDegs[i] = {
-          label: items[i],
-          startDeg: startDeg,
-          endDeg: endDeg
-        }
+      itemDegs[i] = {
+        label: items[i],
+        startDeg: startDeg,
+        endDeg: endDeg
       }
     }
+  }
 
-    let speed = 0
-    let maxRotation = randomRange(360 * 4, 360 * 6)
-    let pause = false
-    let animationId
+  let speed = 0
+  let maxRotation = randomRange(360 * 4, 360 * 6)
+  let pause = false
+  let animationId
 
-    function animate() {
-      if (pause) return;
-      speed = easeOutSine(getPercent(currentDeg, maxRotation, 0)) * 15
-      if (speed < 0.01) {
-        speed = 0
-        pause = true
-        showWinner()
-        return;
-      }
-      currentDeg += speed
-      draw()
-      animationId = window.requestAnimationFrame(animate);
+  function animate() {
+    if (pause) return;
+    speed = easeOutSine(getPercent(currentDeg, maxRotation, 0)) * 20
+    if (speed < 0.01) {
+      speed = 0
+      pause = true
+      showWinner()
+      return;
     }
+    currentDeg += speed
+    draw()
+    animationId = window.requestAnimationFrame(animate);
+  }
 
- function showWinner() {
-  let normalizedDeg = (currentDeg % 360 + 270) % 360; // Align with pointer
-  let stepDeg = 360 / items.length;
-  let winnerIdx = Math.floor(normalizedDeg / stepDeg);
-  winnerIdx = (winnerIdx + 1) % items.length; // Fix off-by-one shift
-  document.getElementById("winner").innerText = items[winnerIdx];
-  showQuiz(winnerIdx);
-}
+  function showWinner() {
+    let normalizedDeg = (currentDeg % 360 + 270) % 360; // Align with pointer
+    let stepDeg = 360 / items.length;
+    let winnerIdx = Math.floor(normalizedDeg / stepDeg);
+    winnerIdx = (winnerIdx + 1) % items.length; // Fix off-by-one shift
+    document.getElementById("winner").innerText = items[winnerIdx];
+    showQuiz(winnerIdx);
+  }
 
-
-    function spin() {
-      if (speed != 0) return;
-      cancelAnimationFrame(animationId);
-      maxRotation = 0;
-      currentDeg = 0;
-      createWheel();
-      draw();
-      maxRotation = randomRange(360 * 4, 360 * 7);
-      itemDegs = {};
-      pause = false;
-      winnerIndex = -1;
-      window.requestAnimationFrame(animate);
-    }
-  </script>
+  function spin() {
+    if (speed != 0 || spinsLeft <= 0) return;
+    
+    spinsLeft--;
+    updateGameDisplay();
+    
+    cancelAnimationFrame(animationId);
+    maxRotation = 0;
+    currentDeg = 0;
+    createWheel();
+    draw();
+    maxRotation = randomRange(360 * 4, 360 * 7);
+    itemDegs = {};
+    pause = false;
+    winnerIndex = -1;
+    window.requestAnimationFrame(animate);
+  }
+  
+  // Initialize the game display
+  updateGameDisplay();
+</script>
 </body>
 </html>
